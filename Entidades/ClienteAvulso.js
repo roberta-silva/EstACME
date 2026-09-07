@@ -37,8 +37,3 @@ export default class ClienteAvulso {
     return dias * TARIFA_DIARIA;
   }
 }
-
-// let novo = new ClienteAvulso('iyo9d48');
-// console.log(novo.calcularCusto('2026-08-22T13:30', '2026-08-22T23:50'));
-// console.log(novo.tipo);
-// console.log(novo.placa);

@@ -25,17 +25,19 @@ export default class CadastroClientes {
   }
 
   buscarClientePorPlaca(placa) {
-    const documento = this.#proprietarioPorPlaca.get(placa);
+    const documento = this.#proprietarioPorPlaca.get(placa.toUpperCase());
     return documento ? this.#clientes.get(documento) : null;
   }
 
   isPreCadastrado(placa) {
-    return this.#proprietarioPorPlaca.has(placa);
+    return this.#proprietarioPorPlaca.has(placa.toUpperCase());
   }
 
   cadastrarPlaca(documento, placa) {
     const cliente = this.buscarCliente(documento);
     if (!cliente) throw new Error('Cliente não encontrado!');
+
+    placa = placa.toUpperCase();
     if (this.#placasCadastradas.has(placa))
       throw new Error(`Placa ${placa} já cadastrada no sistema.`);
 
@@ -47,6 +49,8 @@ export default class CadastroClientes {
   removerPlaca(documento, placa) {
     const cliente = this.buscarCliente(documento);
     if (!cliente) throw new Error('Cliente não encontrado!');
+
+    placa = placa.toUpperCase();
     cliente.removerVeiculo(placa);
     this.#placasCadastradas.delete(placa);
     this.#proprietarioPorPlaca.delete(placa);
