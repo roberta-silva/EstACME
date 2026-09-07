@@ -1,21 +1,26 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import nReadlines from 'n-readlines';
 import Estudante from '../Entidades/Estudante.js';
 import Professor from '../Entidades/Professor.js';
 import Empresa from '../Entidades/Empresa.js';
 import TicketEstacionamento from '../Estacionamento/TicketEstacionamento.js';
 
+// Diretorio deste arquivo (Persistencia/), usado para montar caminhos
+// absolutos, independentes de onde o comando "node" for executado (cwd)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default class Persistencia {
   constructor(cadastroClientes, registro, veiculosBloqueados) {
     this.cadastroClientes = cadastroClientes;
     this.registro = registro;
     this.veiculosBloqueados = veiculosBloqueados;
-    this.pastaDados = pastaDados;
 
-    this.pastaDados = '../dados';
-    this.arquivoClientes = '../dados/clientes.csv';
-    this.arquivoRegistros = '../dados/registros.csv';
-    this.arquivoBloqueados = '../dados/bloqueados.csv';
+    this.pastaDados = path.join(__dirname, '..', 'dados');
+    this.arquivoClientes = path.join(this.pastaDados, 'clientes.csv');
+    this.arquivoRegistros = path.join(this.pastaDados, 'registros.csv');
+    this.arquivoBloqueados = path.join(this.pastaDados, 'bloqueados.csv');
   }
 
   inicializarArquivos() {
@@ -48,22 +53,34 @@ export default class Persistencia {
     while ((linha = arquivo.next())) {
       const dados = linha.toString().trim().split(',');
 
-      if (dados.length < 4) continue;
+      if (dados.length < 3) continue;
 
       const documento = dados[0];
       const nome = dados[1];
       const terceiroCampo = dados[2];
-      const tipo = dados[3];
-      const placas = dados.slice(4);
+
+      const ehNumero = terceiroCampo !== '' && !isNaN(Number(terceiroCampo));
+
+      let tipo;
+      let valorExtra = 0;
+      let placas;
+
+      if (ehNumero) {
+        tipo = dados[3];
+        valorExtra = Number(terceiroCampo);
+        placas = dados.slice(4);
+      } else {
+        tipo = terceiroCampo;
+        placas = dados.slice(3);
+      }
 
       let cliente;
 
       if (tipo === 'Estudante') {
         cliente = new Estudante(nome, documento);
-        const saldo = Number(terceiroCampo);
 
-        if (saldo > 0) {
-          cliente.carregarSaldo(saldo);
+        if (valorExtra > 0) {
+          cliente.carregarSaldo(valorExtra);
         }
       }
 
@@ -73,10 +90,9 @@ export default class Persistencia {
 
       if (tipo === 'Empresa') {
         cliente = new Empresa(nome, documento);
-        const debito = Number(terceiroCampo);
 
-        if (debito > 0) {
-          cliente.acumularDebito(debito);
+        if (valorExtra > 0) {
+          cliente.acumularDebito(valorExtra);
         }
       }
 
@@ -151,25 +167,34 @@ export default class Persistencia {
     const linhas = [];
 
     for (const cliente of this.cadastroClientes.listarClientes()) {
-      let terceiroCampo;
+      let colunas;
 
       if (cliente.tipo === 'Estudante') {
-        terceiroCampo = cliente.saldo;
+        colunas = [
+          cliente.documento,
+          cliente.nome,
+          cliente.saldo,
+          cliente.tipo,
+          ...cliente.veiculos,
+        ];
       } else if (cliente.tipo === 'Empresa') {
-        terceiroCampo = cliente.debitos;
+        colunas = [
+          cliente.documento,
+          cliente.nome,
+          cliente.debitos,
+          cliente.tipo,
+          ...cliente.veiculos,
+        ];
       } else {
-        terceiroCampo = 'Professor';
+        colunas = [
+          cliente.documento,
+          cliente.nome,
+          cliente.tipo,
+          ...cliente.veiculos,
+        ];
       }
 
-      const linha = [
-        cliente.documento,
-        cliente.nome,
-        terceiroCampo,
-        cliente.tipo,
-        ...cliente.veiculos,
-      ].join(',');
-
-      linhas.push(linha);
+      linhas.push(colunas.join(','));
     }
     fs.writeFileSync(this.arquivoClientes, linhas.join('\n'));
   }

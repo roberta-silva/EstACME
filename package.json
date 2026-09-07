@@ -12,6 +12,7 @@
   "type": "module",
   "dependencies": {
     "bycontract": "^3.0.1",
-    "n-readlines": "^3.4.1"
+    "n-readlines": "^3.4.1",
+    "prompt-sync": "^4.2.0"
   }
 }

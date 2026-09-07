@@ -9,9 +9,15 @@ export default class RelatoriosGerenciais {
   valorTotalArrecadado(inicio, fim, categorias = null) {
     const tickets = this.registro.listarPorPeriodo(inicio, fim);
 
+    const categoriasNormalizadas = categorias
+      ? categorias.map((c) => c.trim().toLowerCase())
+      : null;
+
     return tickets
       .filter(
-        (ticket) => !categorias || categorias.includes(ticket.tipoCliente),
+        (ticket) =>
+          !categoriasNormalizadas ||
+          categoriasNormalizadas.includes(ticket.tipoCliente.toLowerCase()),
       )
       .reduce((total, ticket) => total + ticket.valorPago, 0);
   }
@@ -33,13 +39,13 @@ export default class RelatoriosGerenciais {
         this.registro.estaEstacionado(placa),
       ),
       saldo: cliente.tipo === 'Estudante' ? cliente.saldo : null,
-      debito: cliente.tipo === 'Empresa' ? cliente.saldo : null,
+      debito: cliente.tipo === 'Empresa' ? cliente.debitos : null,
       inadimplente: cliente.tipo === 'Empresa' ? cliente.inadimplente : false,
     };
   }
 
   // Registros de estacionamento de cliente cadastrado por período;
-  registrosClienteCadastrados(documento, inicio, fim) {
+  registrosClienteCadastrado(documento, inicio, fim) {
     const cliente = this.cadastro.buscarCliente(documento);
 
     if (!cliente) {

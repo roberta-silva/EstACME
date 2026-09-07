@@ -26,7 +26,7 @@ export default class App {
 
     //persistencia
     this.persistencia = new Persistencia(
-      this.cadastrarCliente,
+      this.cadastroClientes,
       this.registro,
       this.veiculosBloqueados,
     );
