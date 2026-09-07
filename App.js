@@ -8,6 +8,7 @@ import Empresa from './Entidades/Empresa.js';
 import ClienteAvulso from './Entidades/ClienteAvulso.js';
 import ClienteFrequente from '././Descontos/ClienteFrequente.js';
 import { CAPACIDADE_TOTAL } from './Configs/Configs.js';
+import Persistencia from './Persistencia/Persistencia.js';
 
 export default class App {
   constructor() {
@@ -22,6 +23,20 @@ export default class App {
 
     // descontos
     this.clienteFrequente = new ClienteFrequente();
+
+    //persistencia
+    this.persistencia = new Persistencia(
+      this.cadastrarCliente,
+      this.registro,
+      this.veiculosBloqueados,
+    );
+  }
+  iniciar() {
+    this.persistencia.carregarTudo();
+  }
+
+  salvar() {
+    this.persistencia.salvarTudo();
   }
 
   cadastrarCliente(cliente) {
@@ -37,6 +52,8 @@ export default class App {
   }
 
   autorizarEntrada(placa, entrada = new Date()) {
+    placa = placa.toUpperCase();
+
     if (this.registro.vagasOcupadas >= CAPACIDADE_TOTAL) {
       throw new Error(
         'Entrada negada. Capacidade máxima do estacionamento atingida.',
@@ -69,6 +86,8 @@ export default class App {
   }
 
   processarSaida(placa, opcoes = {}) {
+    placa = placa.toUpperCase();
+
     const ticket = this.registro.buscarTicketAberto(placa);
     if (!ticket)
       throw new Error(`Nenhum veículo com a placa ${placa} está estacionado.`);
@@ -98,7 +117,7 @@ export default class App {
     }
 
     const valorDevido = resultadoDesconto.valorFinal;
-    let valorPago;
+    let valorPago = 0;
 
     if (!cliente) {
       const recusouPagar = opcoes.pagou === false;
